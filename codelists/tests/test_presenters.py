@@ -71,7 +71,7 @@ def test_tree_tables(tennis_elbow_codelist):
 
     hierarchy = Hierarchy.from_codes(cl.coding_system, clv.codes)
     ancestor_codes = hierarchy.filter_to_ultimate_ancestors(set(clv.codes))
-    codes_by_type = snomedct.codes_by_type(ancestor_codes, hierarchy)
+    ancestor_codes_by_type = snomedct.codes_by_type(ancestor_codes, hierarchy)
     code_to_term = snomedct.code_to_term(hierarchy.nodes)
 
     # 128133004 (Disorder of elbow)
@@ -83,7 +83,7 @@ def test_tree_tables(tennis_elbow_codelist):
     #   │           └  202855006 (Lateral epicondylitis)
     #   └  239964003 (Soft tissue lesion of elbow region)
 
-    assert presenters.tree_tables(codes_by_type, hierarchy, code_to_term) == [
+    assert presenters.tree_tables(ancestor_codes_by_type, hierarchy, code_to_term) == [
         {
             "heading": "Disorder",
             "rows": [
