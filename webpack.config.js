@@ -4,6 +4,7 @@ module.exports = {
   entry: {
     builder: "./static/src/js/builder/index.jsx",
     codelist: "./static/src/js/codelist.js",
+    "codelist-version": "./static/src/js/codelist-version.js",
     tree: "./static/src/js/tree/index.jsx",
   },
   output: {
