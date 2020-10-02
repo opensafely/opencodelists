@@ -73,6 +73,8 @@ To set up tooling via a pre-commit hook:
 
 * `pre-commit install`
 
+Django Debug Toolbar is installed but only enabled when the `DJANGO_DEBUG_TOOLBAR` environment variable is set.
+
 ## Deployment
 
 OpenCodelists is currently deployed to smallweb1.  Deployment is with fabric:
