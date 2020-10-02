@@ -11,11 +11,10 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.http import require_POST
 from django.views.generic import FormView, TemplateView
 
-from codelists.presenters import tree_tables
 from coding_systems.snomedct.models import Concept as SnomedConcept
 from opencodelists.models import Project
 
-from . import actions
+from . import actions, presenters
 from .coding_systems import CODING_SYSTEMS
 from .definition import Definition
 from .forms import (
@@ -29,7 +28,6 @@ from .forms import (
 )
 from .hierarchy import Hierarchy
 from .models import Codelist, CodelistVersion
-from .presenters import build_definition_rows
 
 
 def index(request):
@@ -296,7 +294,7 @@ def version(request, project_slug, codelist_slug, qualified_version_str):
     parent_map = None
     code_to_url = None
     codes_in_definition = None
-    trees = None
+    tree_tables = None
     if clv.coding_system_id in ["ctv3", "ctv3tpp", "snomedct"]:
         if clv.coding_system_id in ["ctv3", "ctv3tpp"]:
             coding_system = CODING_SYSTEMS["ctv3"]
@@ -310,13 +308,13 @@ def version(request, project_slug, codelist_slug, qualified_version_str):
         ancestor_codes = hierarchy.filter_to_ultimate_ancestors(set(clv.codes))
         codes_by_type = coding_system.codes_by_type(ancestor_codes, hierarchy)
         code_to_term = coding_system.code_to_term(hierarchy.nodes | set(clv.codes))
-        trees = tree_tables(codes_by_type, hierarchy, code_to_term)
+        tree_tables = presenters.tree_tables(codes_by_type, hierarchy, code_to_term)
 
         r = functools.partial(reverse, f"{coding_system.id}:concept")
         code_to_url = {code: r(args=[code]) for code in hierarchy.nodes}
 
         definition = Definition.from_codes(set(clv.codes), hierarchy)
-        rows = build_definition_rows(coding_system, hierarchy, definition)
+        rows = presenters.build_definition_rows(coding_system, hierarchy, definition)
 
         codes_in_definition = [r.code for r in definition.including_rules()]
 
@@ -339,7 +337,7 @@ def version(request, project_slug, codelist_slug, qualified_version_str):
         "versions": clv.codelist.versions.order_by("-version_str"),
         "headers": headers,
         "rows": rows,
-        "trees": trees,
+        "tree_tables": tree_tables,
         "parent_map": parent_map,
         "child_map": child_map,
         "code_to_url": code_to_url,

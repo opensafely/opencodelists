@@ -1,0 +1,17 @@
+{% for table in tree_tables %}
+<div class="mb-4">
+	<h4>{{ table.heading }}</h4>
+
+	{% for row in table.rows %}
+	<div class="d-flex" style="white-space: nowrap">
+		{% for pipe in row.pipes %}
+		<span style="display: inline-block; text-align: center; padding-left: 3px; padding-right: 6px; width: 20px">
+			{{ pipe }}
+		</span>
+		{% endfor %}
+		<span>{{ row.term }}</span>
+		<span class="ml-1">(<code>{{ row.code }}}</code>)</span>
+	</div>
+	{% endfor %}
+</div>
+{% endfor %}
