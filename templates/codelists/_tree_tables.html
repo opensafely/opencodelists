@@ -9,7 +9,11 @@
 			{{ pipe }}
 		</span>
 		{% endfor %}
+		{% if row.included %}
 		<span>{{ row.term }}</span>
+		{% else %}
+		<span style="color: lightgray">{{ row.term }}</span>
+		{% endif %}
 		<span class="ml-1">(<code>{{ row.code }}}</code>)</span>
 	</div>
 	{% endfor %}

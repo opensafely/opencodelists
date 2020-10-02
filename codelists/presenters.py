@@ -69,7 +69,7 @@ def build_definition_rows(coding_system, hierarchy, definition):
     return list(_iter_rules(hierarchy, included_rules, name_for_rule, excluded_rules))
 
 
-def tree_tables(ancestor_codes_by_type, hierarchy, code_to_term):
+def tree_tables(ancestor_codes_by_type, hierarchy, included_codes, code_to_term):
     """
     Return list of tables of codes arranged in trees, grouped by type of code.
 
@@ -82,7 +82,9 @@ def tree_tables(ancestor_codes_by_type, hierarchy, code_to_term):
         rows = []
 
         for ancestor_code in sorted(codes_for_type, key=code_to_term.__getitem__):
-            for row in tree_rows(ancestor_code, hierarchy, code_to_term):
+            for row in tree_rows(
+                ancestor_code, hierarchy, included_codes, code_to_term
+            ):
                 rows.append(row)
 
         table = {
@@ -94,7 +96,7 @@ def tree_tables(ancestor_codes_by_type, hierarchy, code_to_term):
     return tables
 
 
-def tree_rows(ancestor_code, hierarchy, code_to_term):
+def tree_rows(ancestor_code, hierarchy, included_codes, code_to_term):
     """
     Return list of rows for a tree comprising an ancestor and all its descendants in
     depth-first order.  If the hierarchy is a graph, codes will appear once per path
@@ -102,7 +104,12 @@ def tree_rows(ancestor_code, hierarchy, code_to_term):
     """
 
     def helper(code, pipes):
-        yield {"code": code, "term": code_to_term[code], "pipes": pipes}
+        yield {
+            "code": code,
+            "term": code_to_term[code],
+            "pipes": pipes,
+            "included": code in included_codes,
+        }
 
         if pipes:
             *first_pipes, last_pipe = pipes

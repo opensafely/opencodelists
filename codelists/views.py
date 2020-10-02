@@ -308,7 +308,9 @@ def version(request, project_slug, codelist_slug, qualified_version_str):
         ancestor_codes = hierarchy.filter_to_ultimate_ancestors(set(clv.codes))
         codes_by_type = coding_system.codes_by_type(ancestor_codes, hierarchy)
         code_to_term = coding_system.code_to_term(hierarchy.nodes | set(clv.codes))
-        tree_tables = presenters.tree_tables(codes_by_type, hierarchy, code_to_term)
+        tree_tables = presenters.tree_tables(
+            codes_by_type, hierarchy, clv.codes, code_to_term
+        )
 
         r = functools.partial(reverse, f"{coding_system.id}:concept")
         code_to_url = {code: r(args=[code]) for code in hierarchy.nodes}
