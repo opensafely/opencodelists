@@ -109,6 +109,7 @@ def tree_rows(ancestor_code, hierarchy, included_codes, code_to_term):
             "term": code_to_term[code],
             "pipes": pipes,
             "included": code in included_codes,
+            "has_descendants": bool(hierarchy.child_map.get(code, [])),
         }
 
         if pipes:

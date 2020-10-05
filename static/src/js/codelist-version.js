@@ -1,23 +1,52 @@
-$(document).ready(function () {
-  $("#js-codelist-table").DataTable({
-    paging: false,
-  });
+import { readValueFromPage } from "./utils";
+import Hierarchy from "./hierarchy";
+import Tree from "./tree";
 
-  $('a[data-toggle="tab"]').on("click", function () {
-    var url = location.href.split("#")[0];
+// $(document).ready(function () {
+//   $("#js-codelist-table").DataTable({
+//     paging: false,
+//   });
 
-    if ($(this).attr("href") !== "#about") {
-      url += $(this).attr("href");
-    }
+//   $('a[data-toggle="tab"]').on("click", function () {
+//     var url = location.href.split("#")[0];
 
-    history.pushState(null, null, url);
-  });
+//     if ($(this).attr("href") !== "#about") {
+//       url += $(this).attr("href");
+//     }
 
-  switchToTab();
-  window.addEventListener("hashchange", switchToTab);
+//     history.pushState(null, null, url);
+//   });
+
+//   switchToTab();
+//   window.addEventListener("hashchange", switchToTab);
+
+//   setUpTree();
+// });
+
+document.addEventListener("DOMContentLoaded", function () {
+  setUpTree();
 });
 
 function switchToTab() {
   var hash = location.hash || "#about";
   $('#tab-list a[href="' + hash + '"]').tab("show");
+}
+
+function setUpTree() {
+  const hierarchy = new Hierarchy(
+    readValueFromPage("parent-map"),
+    readValueFromPage("child-map")
+  );
+
+  const tree = new Tree(hierarchy, readValueFromPage("expanded-codes"));
+
+  document.addEventListener(
+    "click",
+    function (e) {
+      if (!e.target.matches(".js-toggle-show-descendants")) return;
+      e.preventDefault();
+      tree.toggleShowDescendants(e);
+    },
+    false
+  );
 }

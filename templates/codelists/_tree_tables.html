@@ -3,18 +3,25 @@
 	<h4>{{ table.heading }}</h4>
 
 	{% for row in table.rows %}
-	<div class="d-flex" style="white-space: nowrap">
+	<div class="d-flex js-tree-row" style="white-space: nowrap" data-code="{{ row.code }}">
 		{% for pipe in row.pipes %}
 		<span style="display: inline-block; text-align: center; padding-left: 3px; padding-right: 6px; width: 20px">
 			{{ pipe }}
 		</span>
 		{% endfor %}
+
+		{% if row.has_descendants %}
+		<span class="js-toggle-show-descendants" style="cursor: pointer; margin-left: 2px; margin-right: 4px">
+			⊟
+		</span>
+		{% endif %}
+
 		{% if row.included %}
 		<span>{{ row.term }}</span>
 		{% else %}
 		<span style="color: lightgray">{{ row.term }}</span>
 		{% endif %}
-		<span class="ml-1">(<code>{{ row.code }}}</code>)</span>
+		<span class="ml-1">(<code>{{ row.code }}</code>)</span>
 	</div>
 	{% endfor %}
 </div>

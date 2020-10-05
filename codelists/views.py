@@ -311,6 +311,9 @@ def version(request, project_slug, codelist_slug, qualified_version_str):
         tree_tables = presenters.tree_tables(
             codes_by_type, hierarchy, clv.codes, code_to_term
         )
+        expanded_codes = [
+            node for node in hierarchy.nodes if hierarchy.child_map.get(node)
+        ]
 
         r = functools.partial(reverse, f"{coding_system.id}:concept")
         code_to_url = {code: r(args=[code]) for code in hierarchy.nodes}
@@ -342,6 +345,7 @@ def version(request, project_slug, codelist_slug, qualified_version_str):
         "tree_tables": tree_tables,
         "parent_map": parent_map,
         "child_map": child_map,
+        "expanded_codes": expanded_codes,
         "code_to_url": code_to_url,
         "codes_in_definition": codes_in_definition,
         "definition_rows": definition_rows,
