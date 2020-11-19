@@ -1,6 +1,6 @@
 """
 Generate a JSON containing the context that is passed to the page by
-builder.views.codelist, for use in testing frontend code.
+builder.views.draft, for use in testing frontend code.
 """
 
 import json
@@ -33,18 +33,18 @@ class Command(BaseCommand):
         call_command("loaddata", fixtures_path / "tennis-elbow.json")
 
         owner = UserFactory()
-        cl = actions.create_codelist(
+        draft = actions.create_draft(
             owner=owner, name="Elbows", coding_system_id="snomedct"
         )
-        search_results = do_search(cl.coding_system, "elbow")
+        search_results = do_search(draft.coding_system, "elbow")
         actions.create_search(
-            codelist=cl, term="elbow", codes=search_results["all_codes"]
+            draft=draft, term="elbow", codes=search_results["all_codes"]
         )
 
         client = Client()
         client.force_login(owner)
 
-        rsp = client.get(f"/builder/{owner.username}/{cl.slug}/")
+        rsp = client.get(f"/builder/{owner.username}/{draft.slug}/")
         data = {
             k: rsp.context[k]
             for k in [

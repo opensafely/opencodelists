@@ -6,10 +6,10 @@
 
 <div class="row">
   <div class="col-12">
-    {% if codelists %}
+    {% if drafts %}
     <ul>
-      {% for cl in codelists %}
-      <li><a href="{{ cl.get_absolute_url }}">{{ cl.name }}</a></li>
+      {% for draft in drafts %}
+      <li><a href="{{ draft.get_absolute_url }}">{{ draft.name }}</a></li>
       {% endfor %}
     </ul>
     {% else %}

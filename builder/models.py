@@ -13,9 +13,7 @@ class DraftCodelist(models.Model):
         ("bnf", CODING_SYSTEMS["bnf"].name),
     ]
 
-    owner = models.ForeignKey(
-        User, related_name="draft_codelists", on_delete=models.CASCADE
-    )
+    owner = models.ForeignKey(User, related_name="drafts", on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     slug = models.SlugField()
     coding_system_id = models.CharField(
@@ -33,7 +31,7 @@ class DraftCodelist(models.Model):
         return CODING_SYSTEMS[self.coding_system_id]
 
     def get_absolute_url(self):
-        return reverse("builder:codelist", args=(self.owner.username, self.slug))
+        return reverse("builder:draft", args=(self.owner.username, self.slug))
 
 
 class Code(models.Model):
@@ -45,30 +43,30 @@ class Code(models.Model):
         ("-", "Excluded with descendants"),
         ("(-)", "Excluded by ancestor"),
     ]
-    codelist = models.ForeignKey(
+    draft = models.ForeignKey(
         "DraftCodelist", related_name="codes", on_delete=models.CASCADE
     )
     code = models.CharField(max_length=18)
     status = models.CharField(max_length=3, choices=STATUS_CHOICES, default="?")
 
     class Meta:
-        unique_together = ("codelist", "code")
+        unique_together = ("draft", "code")
 
 
 class Search(models.Model):
-    codelist = models.ForeignKey(
+    draft = models.ForeignKey(
         "DraftCodelist", related_name="searches", on_delete=models.CASCADE
     )
     term = models.CharField(max_length=255)
     slug = models.SlugField()
 
     class Meta:
-        unique_together = ("codelist", "slug")
+        unique_together = ("draft", "slug")
 
     def get_absolute_url(self):
         return reverse(
             "builder:search",
-            args=(self.codelist.owner.username, self.codelist.slug, self.slug),
+            args=(self.draft.owner.username, self.draft.slug, self.slug),
         )
 
 

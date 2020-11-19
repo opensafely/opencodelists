@@ -12,44 +12,44 @@ from .models import Code, SearchResult
 logger = structlog.get_logger()
 
 
-def create_codelist(*, owner, name, coding_system_id):
-    codelist = owner.draft_codelists.create(
+def create_draft(*, owner, name, coding_system_id):
+    draft = owner.drafts.create(
         name=name, slug=slugify(name), coding_system_id=coding_system_id
     )
 
-    logger.info("Create Codelist", codelist_pk=codelist.pk)
+    logger.info("Create Codelist", draft_pk=draft.pk)
 
-    return codelist
+    return draft
 
 
 @transaction.atomic
-def create_codelist_with_codes(*, owner, name, coding_system_id, codes):
-    codelist = owner.draft_codelists.create(
+def create_draft_with_codes(*, owner, name, coding_system_id, codes):
+    draft = owner.drafts.create(
         name=name, slug=slugify(name), coding_system_id=coding_system_id
     )
 
-    Code.objects.bulk_create(Code(codelist=codelist, code=code) for code in codes)
+    Code.objects.bulk_create(Code(draft=draft, code=code) for code in codes)
 
-    logger.info("Create Codelist with codes", codelist_pk=codelist.pk)
+    logger.info("Create Codelist with codes", draft_pk=draft.pk)
 
-    return codelist
+    return draft
 
 
 @transaction.atomic
-def create_search(*, codelist, term, codes):
-    search = codelist.searches.create(term=term, slug=slugify(term))
+def create_search(*, draft, term, codes):
+    search = draft.searches.create(term=term, slug=slugify(term))
 
-    # Ensure that there is a Code object linked to this codelist for each code.
+    # Ensure that there is a Code object linked to this draft for each code.
     codes_with_existing_code_objs = set(
-        codelist.codes.filter(code__in=codes).values_list("code", flat=True)
+        draft.codes.filter(code__in=codes).values_list("code", flat=True)
     )
     codes_without_existing_code_objs = set(codes) - codes_with_existing_code_objs
     Code.objects.bulk_create(
-        Code(codelist=codelist, code=code) for code in codes_without_existing_code_objs
+        Code(draft=draft, code=code) for code in codes_without_existing_code_objs
     )
 
     # Create a SearchResult for each code.
-    code_obj_ids = codelist.codes.filter(code__in=codes).values_list("id", flat=True)
+    code_obj_ids = draft.codes.filter(code__in=codes).values_list("id", flat=True)
     SearchResult.objects.bulk_create(
         SearchResult(search=search, code_id=id) for id in code_obj_ids
     )
@@ -65,7 +65,7 @@ def delete_search(*, search):
     search_pk = search.pk
 
     # Delete any codes that only belong to this search
-    search.codelist.codes.annotate(num_results=Count("results")).filter(
+    search.draft.codes.annotate(num_results=Count("results")).filter(
         results__search=search, num_results=1
     ).delete()
 
@@ -76,9 +76,9 @@ def delete_search(*, search):
 
 
 @transaction.atomic
-def update_code_statuses(*, codelist, updates):
-    code_to_status = dict(codelist.codes.values_list("code", "status"))
-    h = Hierarchy.from_codes(codelist.coding_system, list(code_to_status))
+def update_code_statuses(*, draft, updates):
+    code_to_status = dict(draft.codes.values_list("code", "status"))
+    h = Hierarchy.from_codes(draft.coding_system, list(code_to_status))
     new_code_to_status = h.update_node_to_status(code_to_status, updates)
 
     status_to_new_code = defaultdict(list)
@@ -86,6 +86,6 @@ def update_code_statuses(*, codelist, updates):
         status_to_new_code[status].append(code)
 
     for status, codes in status_to_new_code.items():
-        codelist.codes.filter(code__in=codes).update(status=status)
+        draft.codes.filter(code__in=codes).update(status=status)
 
-    logger.info("Updated Codelist Statuses", codelist_pk=codelist.pk)
+    logger.info("Updated Codelist Statuses", draft_pk=draft.pk)

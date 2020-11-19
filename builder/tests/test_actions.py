@@ -2,29 +2,29 @@ from builder import actions
 from opencodelists.tests.factories import UserFactory
 
 
-def test_create_codelist():
+def test_create_draft():
     # Arrange: create a user
     owner = UserFactory()
 
-    # Act: create a codelist
-    cl = actions.create_codelist(
+    # Act: create a draft
+    draft = actions.create_draft(
         owner=owner, name="Test Codelist", coding_system_id="snomedct"
     )
 
     # Assert...
-    # that a codelist's attributes have been set
-    assert cl.owner == owner
-    assert cl.name == "Test Codelist"
-    assert cl.slug == "test-codelist"
-    assert cl.coding_system_id == "snomedct"
+    # that a draft's attributes have been set
+    assert draft.owner == owner
+    assert draft.name == "Test Codelist"
+    assert draft.slug == "test-codelist"
+    assert draft.coding_system_id == "snomedct"
 
 
-def test_create_codelist_with_codes():
+def test_create_draft_with_codes():
     # Arrange: create a user
     owner = UserFactory()
 
-    # Act: create a codelist with codes
-    cl = actions.create_codelist_with_codes(
+    # Act: create a draft with codes
+    draft = actions.create_draft_with_codes(
         owner=owner,
         name="Test Codelist",
         coding_system_id="snomedct",
@@ -32,111 +32,111 @@ def test_create_codelist_with_codes():
     )
 
     # Assert...
-    # that a codelist's attributes have been set
-    assert cl.owner == owner
-    assert cl.name == "Test Codelist"
-    assert cl.slug == "test-codelist"
-    assert cl.coding_system_id == "snomedct"
-    assert cl.codes.count() == 2
+    # that a draft's attributes have been set
+    assert draft.owner == owner
+    assert draft.name == "Test Codelist"
+    assert draft.slug == "test-codelist"
+    assert draft.coding_system_id == "snomedct"
+    assert draft.codes.count() == 2
 
 
 def test_create_search():
-    # Arrange: create a codelist
+    # Arrange: create a draft
     owner = UserFactory()
-    cl = actions.create_codelist(
+    draft = actions.create_draft(
         owner=owner, name="Test Codelist", coding_system_id="snomedct"
     )
 
     # Act: create a first search
     s = actions.create_search(
-        codelist=cl, term="swimming", codes=["1067731000000107", "1068181000000106"]
+        draft=draft, term="swimming", codes=["1067731000000107", "1068181000000106"]
     )
 
     # Assert...
     # that the search's attributes have been set
-    assert s.codelist == cl
+    assert s.draft == draft
     assert s.term == "swimming"
     assert s.slug == "swimming"
 
     # that the newly created search has 2 results
     assert s.results.count() == 2
-    # that the codelist has 1 search
-    assert cl.searches.count() == 1
-    # that the codelist has 2 codes
-    assert cl.codes.count() == 2
+    # that the draft has 1 search
+    assert draft.searches.count() == 1
+    # that the draft has 2 codes
+    assert draft.codes.count() == 2
 
     # Act: create another search
     s = actions.create_search(
-        codelist=cl, term="synchronised", codes=["1068181000000106"]
+        draft=draft, term="synchronised", codes=["1068181000000106"]
     )
 
     # Assert...
     # that the newly created search has 1 result
     assert s.results.count() == 1
-    # that the codelist has 2 searches
-    assert cl.searches.count() == 2
-    # that the codelist still has 2 codes
-    assert cl.codes.count() == 2
+    # that the draft has 2 searches
+    assert draft.searches.count() == 2
+    # that the draft still has 2 codes
+    assert draft.codes.count() == 2
 
 
 def test_delete_search():
-    # Arrange: create a codelist with codes and a search
+    # Arrange: create a draft with codes and a search
     owner = UserFactory()
-    cl = actions.create_codelist_with_codes(
+    draft = actions.create_draft_with_codes(
         owner=owner,
         name="Test Codelist",
         coding_system_id="snomedct",
         codes=["1067731000000107", "1068181000000106"],
     )
     s = actions.create_search(
-        codelist=cl, term="synchronised", codes=["1068181000000106"]
+        draft=draft, term="synchronised", codes=["1068181000000106"]
     )
 
     # Act: delete the search
     actions.delete_search(search=s)
 
     # Assert...
-    # that the codelist has 0 searches
-    assert cl.searches.count() == 0
-    # that the still codelist has 1 code which doesn't belong to a search
-    assert cl.codes.count() == 1
+    # that the draft has 0 searches
+    assert draft.searches.count() == 0
+    # that the still draft has 1 code which doesn't belong to a search
+    assert draft.codes.count() == 1
 
     # Arrange: create new searches
     s1 = actions.create_search(
-        codelist=cl, term="synchronised", codes=["1068181000000106"]
+        draft=draft, term="synchronised", codes=["1068181000000106"]
     )
     s2 = actions.create_search(
-        codelist=cl, term="swimming", codes=["1067731000000107", "1068181000000106"]
+        draft=draft, term="swimming", codes=["1067731000000107", "1068181000000106"]
     )
 
     # Act: delete the search for "swimming"
     actions.delete_search(search=s2)
 
     # Assert...
-    # that the codelist has only 1 search
-    assert cl.searches.count() == 1
-    # that the codelist has only 1 code
-    assert cl.codes.count() == 1
+    # that the draft has only 1 search
+    assert draft.searches.count() == 1
+    # that the draft has only 1 code
+    assert draft.codes.count() == 1
 
     # Arrange: recreate the search for "swimming"
     actions.create_search(
-        codelist=cl, term="swimming", codes=["1067731000000107", "1068181000000106"]
+        draft=draft, term="swimming", codes=["1067731000000107", "1068181000000106"]
     )
 
     # Act: delete the search for "synchronised"
     actions.delete_search(search=s1)
 
     # Assert...
-    # that the codelist has only 1 search
-    assert cl.searches.count() == 1
-    # that the codelist still has both codes
-    assert cl.codes.count() == 2
+    # that the draft has only 1 search
+    assert draft.searches.count() == 1
+    # that the draft still has both codes
+    assert draft.codes.count() == 2
 
 
 def test_update_code_statuses(tennis_elbow):
-    # Arrange: load fixtures and create a codelist with a search
+    # Arrange: load fixtures and create a draft with a search
     owner = UserFactory()
-    cl = actions.create_codelist(
+    draft = actions.create_draft(
         owner=owner, name="Test Codelist", coding_system_id="snomedct"
     )
 
@@ -159,7 +159,7 @@ def test_update_code_statuses(tennis_elbow):
     #             439656005 Arthritis of elbow
     #                 202855006 Lateral epicondylitis
     actions.create_search(
-        codelist=cl,
+        draft=draft,
         term="elbow",
         codes=[
             "116309007",  # Finding of elbow region
@@ -176,10 +176,10 @@ def test_update_code_statuses(tennis_elbow):
     )
 
     # Act: process single update from the client
-    actions.update_code_statuses(codelist=cl, updates=[("35185008", "+")])
+    actions.update_code_statuses(draft=draft, updates=[("35185008", "+")])
 
     # Assert that results have the expected status
-    assert dict(cl.codes.values_list("code", "status")) == {
+    assert dict(draft.codes.values_list("code", "status")) == {
         "116309007": "?",  # Finding of elbow region
         "128133004": "?",  # Disorder of elbow
         "239964003": "?",  # Soft tissue lesion of elbow region
@@ -194,11 +194,11 @@ def test_update_code_statuses(tennis_elbow):
 
     # Act: process multiple updates from the client
     actions.update_code_statuses(
-        codelist=cl, updates=[("35185008", "-"), ("116309007", "+"), ("35185008", "?")]
+        draft=draft, updates=[("35185008", "-"), ("116309007", "+"), ("35185008", "?")]
     )
 
     # Assert that results have the expected status
-    assert dict(cl.codes.values_list("code", "status")) == {
+    assert dict(draft.codes.values_list("code", "status")) == {
         "116309007": "+",  # Finding of elbow region
         "128133004": "(+)",  # Disorder of elbow
         "239964003": "(+)",  # Soft tissue lesion of elbow region

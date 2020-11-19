@@ -20,19 +20,19 @@ from .models import DraftCodelist
 NO_SEARCH_TERM = object()
 
 
-def download(request, username, codelist_slug):
-    codelist = get_object_or_404(DraftCodelist, owner=username, slug=codelist_slug)
+def download(request, username, draft_slug):
+    draft = get_object_or_404(DraftCodelist, owner=username, slug=draft_slug)
 
     # get codes
     codes = list(
-        codelist.codes.filter(status__contains="+").values_list("code", flat=True)
+        draft.codes.filter(status__contains="+").values_list("code", flat=True)
     )
 
     # get terms for codes
-    code_to_term = codelist.coding_system.lookup_names(codes)
+    code_to_term = draft.coding_system.lookup_names(codes)
 
     timestamp = timezone.now().strftime("%Y-%m-%dT%H-%M-%S")
-    filename = f"{username}-{codelist_slug}-{timestamp}.csv"
+    filename = f"{username}-{draft_slug}-{timestamp}.csv"
 
     response = HttpResponse(content_type="text/csv")
     response["Content-Disposition"] = f'attachment; filename="{filename}"'
@@ -45,18 +45,18 @@ def download(request, username, codelist_slug):
     return response
 
 
-def download_dmd(request, username, codelist_slug):
-    codelist = get_object_or_404(
-        DraftCodelist, owner=username, slug=codelist_slug, coding_system_id="bnf"
+def download_dmd(request, username, draft_slug):
+    draft = get_object_or_404(
+        DraftCodelist, owner=username, slug=draft_slug, coding_system_id="bnf"
     )
 
     # get codes
     codes = list(
-        codelist.codes.filter(status__contains="+").values_list("code", flat=True)
+        draft.codes.filter(status__contains="+").values_list("code", flat=True)
     )
 
     timestamp = timezone.now().strftime("%Y-%m-%dT%H-%M-%S")
-    filename = f"{username}-{codelist_slug}-{timestamp}.csv"
+    filename = f"{username}-{draft_slug}-{timestamp}.csv"
 
     response = HttpResponse(content_type="text/csv")
     response["Content-Disposition"] = f'attachment; filename="{filename}"'
@@ -81,29 +81,29 @@ def user(request, username):
     if request.method == "POST":
         form = DraftCodelistForm(request.POST)
         if form.is_valid():
-            codelist = actions.create_codelist(
+            draft = actions.create_draft(
                 owner=user,
                 name=form.cleaned_data["name"],
                 coding_system_id=form.cleaned_data["coding_system_id"],
             )
-            return redirect(codelist)
+            return redirect(draft)
     else:
         form = DraftCodelistForm()
 
     ctx = {
         "user": user,
-        "codelists": user.draft_codelists.all().order_by("name"),
+        "drafts": user.drafts.all().order_by("name"),
         "form": form,
     }
     return render(request, "builder/user.html", ctx)
 
 
 @login_required
-def codelist(request, username, codelist_slug, search_slug=None):
-    codelist = get_object_or_404(DraftCodelist, owner=username, slug=codelist_slug)
-    coding_system = codelist.coding_system
+def draft(request, username, draft_slug, search_slug=None):
+    draft = get_object_or_404(DraftCodelist, owner=username, slug=draft_slug)
+    coding_system = draft.coding_system
 
-    code_to_status = dict(codelist.codes.values_list("code", "status"))
+    code_to_status = dict(draft.codes.values_list("code", "status"))
     all_codes = list(code_to_status)
 
     included_codes = [c for c in all_codes if code_to_status[c] == "+"]
@@ -115,24 +115,24 @@ def codelist(request, username, codelist_slug, search_slug=None):
     elif search_slug is NO_SEARCH_TERM:
         search = NO_SEARCH_TERM
         displayed_codes = list(
-            codelist.codes.filter(results=None).values_list("code", flat=True)
+            draft.codes.filter(results=None).values_list("code", flat=True)
         )
     else:
-        search = get_object_or_404(codelist.searches, slug=search_slug)
+        search = get_object_or_404(draft.searches, slug=search_slug)
         displayed_codes = list(search.results.values_list("code__code", flat=True))
 
     searches = [
         {"term": s.term, "url": s.get_absolute_url(), "active": s == search}
-        for s in codelist.searches.order_by("term")
+        for s in draft.searches.order_by("term")
     ]
 
-    if searches and codelist.codes.filter(results=None).exists():
+    if searches and draft.codes.filter(results=None).exists():
         searches.append(
             {
                 "term": "[no search term]",
                 "url": reverse(
                     "builder:no-search-term",
-                    args=[codelist.owner.username, codelist.slug],
+                    args=[draft.owner.username, draft.slug],
                 ),
                 "active": search_slug == NO_SEARCH_TERM,
             }
@@ -160,26 +160,20 @@ def codelist(request, username, codelist_slug, search_slug=None):
         ).items()
     )
 
-    update_url = reverse(
-        "builder:update", args=[codelist.owner.username, codelist.slug]
-    )
-    search_url = reverse(
-        "builder:new_search", args=[codelist.owner.username, codelist.slug]
-    )
-    download_url = reverse(
-        "builder:download", args=[codelist.owner.username, codelist.slug]
-    )
+    update_url = reverse("builder:update", args=[draft.owner.username, draft.slug])
+    search_url = reverse("builder:new_search", args=[draft.owner.username, draft.slug])
+    download_url = reverse("builder:download", args=[draft.owner.username, draft.slug])
 
-    if codelist.coding_system_id == "bnf":
+    if draft.coding_system_id == "bnf":
         download_dmd_url = reverse(
-            "builder:download-dmd", args=[codelist.owner.username, codelist.slug]
+            "builder:download-dmd", args=[draft.owner.username, draft.slug]
         )
     else:
         download_dmd_url = None
 
     ctx = {
-        "user": codelist.owner,
-        "codelist": codelist,
+        "user": draft.owner,
+        "draft": draft,
         "search": search,
         "NO_SEARCH_TERM": NO_SEARCH_TERM,
         # The following values are passed to the CodelistBuilder component.
@@ -196,7 +190,7 @@ def codelist(request, username, codelist_slug, search_slug=None):
         "child_map": {c: list(pp) for c, pp in hierarchy.child_map.items()},
         "code_to_term": code_to_term,
         "code_to_status": code_to_status,
-        "is_editable": request.user == codelist.owner,
+        "is_editable": request.user == draft.owner,
         "update_url": update_url,
         "search_url": search_url,
         "download_url": download_url,
@@ -204,27 +198,27 @@ def codelist(request, username, codelist_slug, search_slug=None):
         # }
     }
 
-    return render(request, "builder/codelist.html", ctx)
+    return render(request, "builder/draft.html", ctx)
 
 
 @login_required
 @require_http_methods(["POST"])
-def update(request, username, codelist_slug):
-    codelist = get_object_or_404(DraftCodelist, owner=username, slug=codelist_slug)
+def update(request, username, draft_slug):
+    draft = get_object_or_404(DraftCodelist, owner=username, slug=draft_slug)
     updates = json.loads(request.body)["updates"]
-    actions.update_code_statuses(codelist=codelist, updates=updates)
+    actions.update_code_statuses(draft=draft, updates=updates)
     return JsonResponse({"updates": updates})
 
 
 @login_required
 @require_http_methods(["POST"])
-def new_search(request, username, codelist_slug):
-    codelist = get_object_or_404(DraftCodelist, owner=username, slug=codelist_slug)
+def new_search(request, username, draft_slug):
+    draft = get_object_or_404(DraftCodelist, owner=username, slug=draft_slug)
     term = request.POST["term"]
-    codes = do_search(codelist.coding_system, term)["all_codes"]
+    codes = do_search(draft.coding_system, term)["all_codes"]
     if not codes:
         # TODO message about no hits
-        return redirect(codelist)
+        return redirect(draft)
 
-    search = actions.create_search(codelist=codelist, term=term, codes=codes)
+    search = actions.create_search(draft=draft, term=term, codes=codes)
     return redirect(search)
