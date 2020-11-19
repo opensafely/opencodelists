@@ -34,7 +34,7 @@ class DraftCodelist(models.Model):
         return reverse("builder:draft", args=(self.owner.username, self.slug))
 
 
-class Code(models.Model):
+class CodeObj(models.Model):
     STATUS_CHOICES = [
         ("?", "Undecided"),
         ("!", "In conflict"),
@@ -44,7 +44,7 @@ class Code(models.Model):
         ("(-)", "Excluded by ancestor"),
     ]
     draft = models.ForeignKey(
-        "DraftCodelist", related_name="codes", on_delete=models.CASCADE
+        "DraftCodelist", related_name="code_objs", on_delete=models.CASCADE
     )
     code = models.CharField(max_length=18)
     status = models.CharField(max_length=3, choices=STATUS_CHOICES, default="?")
@@ -74,7 +74,9 @@ class SearchResult(models.Model):
     search = models.ForeignKey(
         "Search", related_name="results", on_delete=models.CASCADE
     )
-    code = models.ForeignKey("Code", related_name="results", on_delete=models.CASCADE)
+    code_obj = models.ForeignKey(
+        "CodeObj", related_name="results", on_delete=models.CASCADE
+    )
 
     class Meta:
-        unique_together = ("search", "code")
+        unique_together = ("search", "code_obj")

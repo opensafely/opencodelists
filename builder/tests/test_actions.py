@@ -37,7 +37,7 @@ def test_create_draft_with_codes():
     assert draft.name == "Test Codelist"
     assert draft.slug == "test-codelist"
     assert draft.coding_system_id == "snomedct"
-    assert draft.codes.count() == 2
+    assert draft.code_objs.count() == 2
 
 
 def test_create_search():
@@ -63,7 +63,7 @@ def test_create_search():
     # that the draft has 1 search
     assert draft.searches.count() == 1
     # that the draft has 2 codes
-    assert draft.codes.count() == 2
+    assert draft.code_objs.count() == 2
 
     # Act: create another search
     s = actions.create_search(
@@ -76,7 +76,7 @@ def test_create_search():
     # that the draft has 2 searches
     assert draft.searches.count() == 2
     # that the draft still has 2 codes
-    assert draft.codes.count() == 2
+    assert draft.code_objs.count() == 2
 
 
 def test_delete_search():
@@ -99,7 +99,7 @@ def test_delete_search():
     # that the draft has 0 searches
     assert draft.searches.count() == 0
     # that the still draft has 1 code which doesn't belong to a search
-    assert draft.codes.count() == 1
+    assert draft.code_objs.count() == 1
 
     # Arrange: create new searches
     s1 = actions.create_search(
@@ -116,7 +116,7 @@ def test_delete_search():
     # that the draft has only 1 search
     assert draft.searches.count() == 1
     # that the draft has only 1 code
-    assert draft.codes.count() == 1
+    assert draft.code_objs.count() == 1
 
     # Arrange: recreate the search for "swimming"
     actions.create_search(
@@ -130,7 +130,7 @@ def test_delete_search():
     # that the draft has only 1 search
     assert draft.searches.count() == 1
     # that the draft still has both codes
-    assert draft.codes.count() == 2
+    assert draft.code_objs.count() == 2
 
 
 def test_update_code_statuses(tennis_elbow):
@@ -179,7 +179,7 @@ def test_update_code_statuses(tennis_elbow):
     actions.update_code_statuses(draft=draft, updates=[("35185008", "+")])
 
     # Assert that results have the expected status
-    assert dict(draft.codes.values_list("code", "status")) == {
+    assert dict(draft.code_objs.values_list("code", "status")) == {
         "116309007": "?",  # Finding of elbow region
         "128133004": "?",  # Disorder of elbow
         "239964003": "?",  # Soft tissue lesion of elbow region
@@ -198,7 +198,7 @@ def test_update_code_statuses(tennis_elbow):
     )
 
     # Assert that results have the expected status
-    assert dict(draft.codes.values_list("code", "status")) == {
+    assert dict(draft.code_objs.values_list("code", "status")) == {
         "116309007": "+",  # Finding of elbow region
         "128133004": "(+)",  # Disorder of elbow
         "239964003": "(+)",  # Soft tissue lesion of elbow region

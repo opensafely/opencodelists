@@ -25,7 +25,7 @@ def download(request, username, draft_slug):
 
     # get codes
     codes = list(
-        draft.codes.filter(status__contains="+").values_list("code", flat=True)
+        draft.code_objs.filter(status__contains="+").values_list("code", flat=True)
     )
 
     # get terms for codes
@@ -52,7 +52,7 @@ def download_dmd(request, username, draft_slug):
 
     # get codes
     codes = list(
-        draft.codes.filter(status__contains="+").values_list("code", flat=True)
+        draft.code_objs.filter(status__contains="+").values_list("code", flat=True)
     )
 
     timestamp = timezone.now().strftime("%Y-%m-%dT%H-%M-%S")
@@ -103,7 +103,7 @@ def draft(request, username, draft_slug, search_slug=None):
     draft = get_object_or_404(DraftCodelist, owner=username, slug=draft_slug)
     coding_system = draft.coding_system
 
-    code_to_status = dict(draft.codes.values_list("code", "status"))
+    code_to_status = dict(draft.code_objs.values_list("code", "status"))
     all_codes = list(code_to_status)
 
     included_codes = [c for c in all_codes if code_to_status[c] == "+"]
@@ -115,18 +115,18 @@ def draft(request, username, draft_slug, search_slug=None):
     elif search_slug is NO_SEARCH_TERM:
         search = NO_SEARCH_TERM
         displayed_codes = list(
-            draft.codes.filter(results=None).values_list("code", flat=True)
+            draft.code_objs.filter(results=None).values_list("code", flat=True)
         )
     else:
         search = get_object_or_404(draft.searches, slug=search_slug)
-        displayed_codes = list(search.results.values_list("code__code", flat=True))
+        displayed_codes = list(search.results.values_list("code_obj__code", flat=True))
 
     searches = [
         {"term": s.term, "url": s.get_absolute_url(), "active": s == search}
         for s in draft.searches.order_by("term")
     ]
 
-    if searches and draft.codes.filter(results=None).exists():
+    if searches and draft.code_objs.filter(results=None).exists():
         searches.append(
             {
                 "term": "[no search term]",
