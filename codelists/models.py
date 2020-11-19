@@ -229,18 +229,18 @@ class DefinitionRule(models.Model):
         ("+", "Included with descendants"),
         ("-", "Excluded with descendants"),
     ]
-    codelist = models.ForeignKey(
+    version = models.ForeignKey(
         "CodelistVersion", related_name="rules", on_delete=models.CASCADE
     )
     code = models.CharField(max_length=18)
     status = models.CharField(max_length=3, choices=STATUS_CHOICES, default="?")
 
     class Meta:
-        unique_together = ("codelist", "code")
+        unique_together = ("version", "code")
 
 
 class CodeObj(models.Model):
-    codelist = models.ForeignKey(
+    version = models.ForeignKey(
         "CodelistVersion", related_name="code_objs", on_delete=models.CASCADE
     )
     code = models.CharField(max_length=18)
