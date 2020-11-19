@@ -225,21 +225,27 @@ class CodelistVersion(models.Model):
 
 
 class CodeObj(models.Model):
-    STATUS_CHOICES = [
-        ("+", "Included with descendants"),
-        ("(+)", "Included by ancestor"),
-        ("-", "Excluded with descendants"),
-        ("(-)", "Excluded by ancestor"),
-    ]
-
     version = models.ForeignKey(
         "CodelistVersion", related_name="code_objs", on_delete=models.CASCADE
     )
     code = models.CharField(max_length=18)
-    status = models.CharField(max_length=3, choices=STATUS_CHOICES)
+    status = models.CharField(max_length=3)
 
     class Meta:
         unique_together = ("version", "code")
+        constraints = [
+            models.CheckConstraint(
+                name="%(app_label)s_%(class)s_status_valid",
+                check=models.Q(
+                    status__in=[
+                        "+",  # Included with descendants
+                        "(+)",  # Included by ancestor
+                        "-",  # Included with descendants
+                        "(-)",  # Excluded by ancestor
+                    ]
+                ),
+            )
+        ]
 
 
 class Search(models.Model):
