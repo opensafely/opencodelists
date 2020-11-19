@@ -225,10 +225,44 @@ class CodelistVersion(models.Model):
 
 
 class CodeObj(models.Model):
+    STATUS_CHOICES = [
+        ("+", "Included with descendants"),
+        ("(+)", "Included by ancestor"),
+        ("-", "Excluded with descendants"),
+        ("(-)", "Excluded by ancestor"),
+    ]
+
     version = models.ForeignKey(
         "CodelistVersion", related_name="code_objs", on_delete=models.CASCADE
     )
     code = models.CharField(max_length=18)
+    status = models.CharField(max_length=3, choices=STATUS_CHOICES)
+
+    class Meta:
+        unique_together = ("version", "code")
+
+
+class Search(models.Model):
+    version = models.ForeignKey(
+        "CodelistVersion", related_name="searches", on_delete=models.CASCADE
+    )
+    term = models.CharField(max_length=255)
+    slug = models.SlugField()
+
+    class Meta:
+        unique_together = ("version", "slug")
+
+
+class SearchResult(models.Model):
+    search = models.ForeignKey(
+        "Search", related_name="results", on_delete=models.CASCADE
+    )
+    code_obj = models.ForeignKey(
+        "CodeObj", related_name="results", on_delete=models.CASCADE
+    )
+
+    class Meta:
+        unique_together = ("search", "code_obj")
 
 
 class SignOff(models.Model):
