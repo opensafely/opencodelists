@@ -216,27 +216,12 @@ class CodelistVersion(models.Model):
             return tuple(sorted({row[ix] for row in rows}))
 
     def _new_style_codes(self):
-        return tuple(sorted(self.code_objs.values_list("code", flat=True)))
+        raise NotImplementedError
 
     def download_filename(self):
         return "{}-{}-{}".format(
             self.codelist.organisation_id, self.codelist.slug, self.tag
         )
-
-
-class DefinitionRule(models.Model):
-    STATUS_CHOICES = [
-        ("+", "Included with descendants"),
-        ("-", "Excluded with descendants"),
-    ]
-    version = models.ForeignKey(
-        "CodelistVersion", related_name="rules", on_delete=models.CASCADE
-    )
-    code = models.CharField(max_length=18)
-    status = models.CharField(max_length=3, choices=STATUS_CHOICES, default="?")
-
-    class Meta:
-        unique_together = ("version", "code")
 
 
 class CodeObj(models.Model):
