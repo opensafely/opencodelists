@@ -39,7 +39,7 @@ ReactDOM.render(
     excludedCodes={readValueFromPage("excluded-codes")}
     isEditable={readValueFromPage("is-editable")}
     updateURL={readValueFromPage("update-url")}
-    searchURL={readValueFromPage("search-url")}
+    newSearchURL={readValueFromPage("new-search-url")}
     downloadURL={readValueFromPage("download-url")}
     downloadDmdURL={readValueFromPage("download-dmd-url")}
   />,

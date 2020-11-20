@@ -7,19 +7,16 @@ app_name = "builder"
 urlpatterns = [
     path("", views.index, name="index"),
     path("<username>/", views.user, name="user"),
-    path("<username>/<draft_slug>/", views.draft, name="draft"),
-    path("<username>/<draft_slug>/search/<search_slug>/", views.search, name="search"),
-    path(
-        "<username>/<draft_slug>/no-search-term/",
-        views.no_search_term,
-        name="no-search-term",
-    ),
-    path("<username>/<draft_slug>/update/", views.update, name="update"),
-    path("<username>/<draft_slug>/search/", views.new_search, name="new_search"),
-    path("<username>/<draft_slug>/download.csv", views.download, name="download"),
-    path(
-        "<username>/<draft_slug>/download-dmd.csv",
-        views.download_dmd,
-        name="download-dmd",
-    ),
 ]
+
+for subpath, view in [
+    ("", views.draft),
+    ("search/<search_slug>/", views.search),
+    ("no-search-term/", views.no_search_term),
+    ("update/", views.update),
+    ("search/", views.new_search),
+    ("download.csv", views.download),
+    ("download-dmd.csv", views.download_dmd),
+]:
+    urlpatterns.append(path("codelist/<hash>/" + subpath, view, name=view.__name__))
+    urlpatterns.append(path("<username>/<draft_slug>/" + subpath, view))

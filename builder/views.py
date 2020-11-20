@@ -4,7 +4,6 @@ import json
 from django.contrib.auth.decorators import login_required
 from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
@@ -145,10 +144,7 @@ def _draft(request, draft, search_slug=None):
         searches.append(
             {
                 "term": "[no search term]",
-                "url": reverse(
-                    "builder:no-search-term",
-                    args=[draft.owner.username, draft.slug],
-                ),
+                "url": draft.get_no_search_url(),
                 "active": search_slug == NO_SEARCH_TERM,
             }
         )
@@ -175,16 +171,10 @@ def _draft(request, draft, search_slug=None):
         ).items()
     )
 
-    update_url = reverse("builder:update", args=[draft.owner.username, draft.slug])
-    search_url = reverse("builder:new_search", args=[draft.owner.username, draft.slug])
-    download_url = reverse("builder:download", args=[draft.owner.username, draft.slug])
-
-    if draft.coding_system_id == "bnf":
-        download_dmd_url = reverse(
-            "builder:download-dmd", args=[draft.owner.username, draft.slug]
-        )
-    else:
-        download_dmd_url = None
+    update_url = draft.get_update_url()
+    new_search_url = draft.get_new_search_url()
+    download_url = draft.get_download_url()
+    download_dmd_url = draft.get_download_dmd_url()
 
     ctx = {
         "user": draft.owner,
@@ -207,7 +197,7 @@ def _draft(request, draft, search_slug=None):
         "code_to_status": code_to_status,
         "is_editable": request.user == draft.owner,
         "update_url": update_url,
-        "search_url": search_url,
+        "new_search_url": new_search_url,
         "download_url": download_url,
         "download_dmd_url": download_dmd_url,
         # }

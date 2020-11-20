@@ -3,6 +3,7 @@ from django.urls import reverse
 from django.utils.functional import cached_property
 
 from codelists.coding_systems import CODING_SYSTEMS
+from opencodelists.hash_utils import hash
 from opencodelists.models import User
 
 
@@ -33,8 +34,31 @@ class DraftCodelist(models.Model):
     def coding_system(self):
         return CODING_SYSTEMS[self.coding_system_id]
 
+    @property
+    def hash(self):
+        return hash(self.id, "DraftCodelist")
+
     def get_absolute_url(self):
-        return reverse("builder:draft", args=(self.owner.username, self.slug))
+        return reverse("builder:draft", args=[self.hash])
+
+    def get_search_url(self, search_term):
+        return reverse("builder:search", args=[self.hash, search_term])
+
+    def get_no_search_url(self):
+        return reverse("builder:no_search_term", args=[self.hash])
+
+    def get_update_url(self):
+        return reverse("builder:update", args=[self.hash])
+
+    def get_new_search_url(self):
+        return reverse("builder:new_search", args=[self.hash])
+
+    def get_download_url(self):
+        return reverse("builder:download", args=[self.hash])
+
+    def get_download_dmd_url(self):
+        if self.coding_system_id == "bnf":
+            return reverse("builder:download_dmd", args=[self.hash])
 
 
 class CodeObj(models.Model):
@@ -74,10 +98,7 @@ class Search(models.Model):
         unique_together = ("draft", "slug")
 
     def get_absolute_url(self):
-        return reverse(
-            "builder:search",
-            args=(self.draft.owner.username, self.draft.slug, self.slug),
-        )
+        return self.draft.get_search_url(self.slug)
 
 
 class SearchResult(models.Model):

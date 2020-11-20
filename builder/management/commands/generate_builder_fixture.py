@@ -60,7 +60,7 @@ class Command(BaseCommand):
                 "code_to_status",
                 "is_editable",
                 "update_url",
-                "search_url",
+                "new_search_url",
                 "download_url",
             ]
         }

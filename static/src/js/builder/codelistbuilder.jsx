@@ -143,7 +143,7 @@ class CodelistBuilder extends React.Component {
             )}
 
             <h3 className="mb-4">New term search</h3>
-            <SearchForm searchURL={this.props.searchURL} />
+            <SearchForm newSearchURL={this.props.newSearchURL} />
             <hr />
 
             <div className="btn-group-vertical btn-block" role="group">
@@ -244,10 +244,10 @@ function TermSearch(props) {
 }
 
 function SearchForm(props) {
-  const { searchURL } = props;
+  const { newSearchURL } = props;
 
   return (
-    <form method="post" action={searchURL}>
+    <form method="post" action={newSearchURL}>
       <div className="form-group">
         <input
           type="hidden"

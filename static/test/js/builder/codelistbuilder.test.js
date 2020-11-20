@@ -166,7 +166,7 @@ it("does the right thing when clicking around", () => {
         excludedCodes={data.excluded_codes}
         isEditable={data.is_editable}
         updateURL={data.update_url}
-        searchURL={data.search_url}
+        newSearchURL={data.new_search_url}
         downloadURL={data.download_url}
         hierarchy={hierarchy}
       />,

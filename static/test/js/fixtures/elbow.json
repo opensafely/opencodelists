@@ -500,6 +500,6 @@
   },
   "is_editable": true,
   "update_url": "/builder/user0/elbows/update/",
-  "search_url": "/builder/user0/elbows/search/",
+  "new_search_url": "/builder/user0/elbows/search/",
   "download_url": "/builder/user0/elbows/download.csv"
 }
