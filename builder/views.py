@@ -2,7 +2,7 @@ import csv
 import json
 
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, JsonResponse
+from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -14,15 +14,14 @@ from mappings.bnfdmd.mappers import bnf_to_dmd
 from opencodelists.models import User
 
 from . import actions
+from .decorators import load_draft
 from .forms import DraftCodelistForm
-from .models import DraftCodelist
 
 NO_SEARCH_TERM = object()
 
 
-def download(request, username, draft_slug):
-    draft = get_object_or_404(DraftCodelist, owner=username, slug=draft_slug)
-
+@load_draft
+def download(request, draft):
     # get codes
     codes = list(
         draft.code_objs.filter(status__contains="+").values_list("code", flat=True)
@@ -32,7 +31,7 @@ def download(request, username, draft_slug):
     code_to_term = draft.coding_system.lookup_names(codes)
 
     timestamp = timezone.now().strftime("%Y-%m-%dT%H-%M-%S")
-    filename = f"{username}-{draft_slug}-{timestamp}.csv"
+    filename = f"{draft.owner.username}-{draft.slug}-{timestamp}.csv"
 
     response = HttpResponse(content_type="text/csv")
     response["Content-Disposition"] = f'attachment; filename="{filename}"'
@@ -45,10 +44,10 @@ def download(request, username, draft_slug):
     return response
 
 
-def download_dmd(request, username, draft_slug):
-    draft = get_object_or_404(
-        DraftCodelist, owner=username, slug=draft_slug, coding_system_id="bnf"
-    )
+@load_draft
+def download_dmd(request, draft):
+    if draft.coding_system_id != "bnf":
+        raise Http404
 
     # get codes
     codes = list(
@@ -56,7 +55,7 @@ def download_dmd(request, username, draft_slug):
     )
 
     timestamp = timezone.now().strftime("%Y-%m-%dT%H-%M-%S")
-    filename = f"{username}-{draft_slug}-{timestamp}.csv"
+    filename = f"{draft.owner.username}-{draft.slug}-{timestamp}.csv"
 
     response = HttpResponse(content_type="text/csv")
     response["Content-Disposition"] = f'attachment; filename="{filename}"'
@@ -99,22 +98,24 @@ def user(request, username):
 
 
 @login_required
-def draft(request, username, draft_slug):
-    return _draft(request, username, draft_slug, None)
+@load_draft
+def draft(request, draft):
+    return _draft(request, draft, None)
 
 
 @login_required
-def search(request, username, draft_slug, search_slug):
-    return _draft(request, username, draft_slug, search_slug)
+@load_draft
+def search(request, draft, search_slug):
+    return _draft(request, draft, search_slug)
 
 
 @login_required
-def no_search_term(request, username, draft_slug):
-    return _draft(request, username, draft_slug, NO_SEARCH_TERM)
+@load_draft
+def no_search_term(request, draft):
+    return _draft(request, draft, NO_SEARCH_TERM)
 
 
-def _draft(request, username, draft_slug, search_slug):
-    draft = get_object_or_404(DraftCodelist, owner=username, slug=draft_slug)
+def _draft(request, draft, search_slug=None):
     coding_system = draft.coding_system
 
     code_to_status = dict(draft.code_objs.values_list("code", "status"))
@@ -217,8 +218,8 @@ def _draft(request, username, draft_slug, search_slug):
 
 @login_required
 @require_http_methods(["POST"])
-def update(request, username, draft_slug):
-    draft = get_object_or_404(DraftCodelist, owner=username, slug=draft_slug)
+@load_draft
+def update(request, draft):
     updates = json.loads(request.body)["updates"]
     actions.update_code_statuses(draft=draft, updates=updates)
     return JsonResponse({"updates": updates})
@@ -226,8 +227,8 @@ def update(request, username, draft_slug):
 
 @login_required
 @require_http_methods(["POST"])
-def new_search(request, username, draft_slug):
-    draft = get_object_or_404(DraftCodelist, owner=username, slug=draft_slug)
+@load_draft
+def new_search(request, draft):
     term = request.POST["term"]
     codes = do_search(draft.coding_system, term)["all_codes"]
     if not codes:
