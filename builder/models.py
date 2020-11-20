@@ -19,6 +19,9 @@ class DraftCodelist(models.Model):
     coding_system_id = models.CharField(
         choices=CODING_SYSTEMS_CHOICES, max_length=32, verbose_name="Coding system"
     )
+    codelist = models.ForeignKey(
+        "codelists.Codelist", related_name="drafts", on_delete=models.CASCADE, null=True
+    )
 
     class Meta:
         unique_together = ("owner", "slug")
