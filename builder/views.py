@@ -99,7 +99,21 @@ def user(request, username):
 
 
 @login_required
-def draft(request, username, draft_slug, search_slug=None):
+def draft(request, username, draft_slug):
+    return _draft(request, username, draft_slug, None)
+
+
+@login_required
+def search(request, username, draft_slug, search_slug):
+    return _draft(request, username, draft_slug, search_slug)
+
+
+@login_required
+def no_search_term(request, username, draft_slug):
+    return _draft(request, username, draft_slug, NO_SEARCH_TERM)
+
+
+def _draft(request, username, draft_slug, search_slug):
     draft = get_object_or_404(DraftCodelist, owner=username, slug=draft_slug)
     coding_system = draft.coding_system
 

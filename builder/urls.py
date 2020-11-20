@@ -8,11 +8,10 @@ urlpatterns = [
     path("", views.index, name="index"),
     path("<username>/", views.user, name="user"),
     path("<username>/<draft_slug>/", views.draft, name="draft"),
-    path("<username>/<draft_slug>/search/<search_slug>/", views.draft, name="search"),
+    path("<username>/<draft_slug>/search/<search_slug>/", views.search, name="search"),
     path(
         "<username>/<draft_slug>/no-search-term/",
-        views.draft,
-        {"search_slug": views.NO_SEARCH_TERM},
+        views.no_search_term,
         name="no-search-term",
     ),
     path("<username>/<draft_slug>/update/", views.update, name="update"),
